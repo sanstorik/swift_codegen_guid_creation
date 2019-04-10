@@ -27,7 +27,9 @@ def writeInnerRelationships(entity_xml):
         inner_entity_name = inner_relationship.get("name")
         output.write("\n\t{}.appendSelf(in: context, fetcher)".format(inner_entity_name))
 
-    output.write("\n")
+    if len(tomany_inner_relationships) > 0:
+        output.write("\n")
+
     for inner_relationship in tomany_inner_relationships:
         inner_entity_name = inner_relationship.get("name")
         output.write("\n\tfor entity in %s {" % (inner_entity_name))
@@ -41,4 +43,5 @@ if __name__ == "__main__":
     core_data_xml = ET.parse("contents").getroot()
 
     for entity_xml in core_data_xml.findall("entity"):
-        create_guid_extension(entity_xml)
+        if len(filter(lambda x: x.get("name") == "created", entity_xml.findall("attribute"))) > 0:
+            create_guid_extension(entity_xml)
