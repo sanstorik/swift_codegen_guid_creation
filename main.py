@@ -20,12 +20,12 @@ def create_guid_extension(entity_xml):
 
 def writeInnerRelationships(entity_xml):
     inner_relationships = entity_xml.findall("relationship")
-    single_inner_relationships = filter(lambda x: x.get("toMany") == "NO", inner_relationships)
+    single_inner_relationships = filter(lambda x: x.get("toMany") == "NO" or x.get("toMany") is None, inner_relationships)
     tomany_inner_relationships = filter(lambda x: x.get("toMany") == "YES", inner_relationships)
 
     for inner_relationship in single_inner_relationships:
         inner_entity_name = inner_relationship.get("name")
-        output.write("\n\t{}.appendSelf(in: context, fetcher)".format(inner_entity_name))
+        output.write("\n\t{}?.appendSelf(in: context, fetcher)".format(inner_entity_name))
 
     if len(tomany_inner_relationships) > 0:
         output.write("\n")
@@ -33,7 +33,7 @@ def writeInnerRelationships(entity_xml):
     for inner_relationship in tomany_inner_relationships:
         inner_entity_name = inner_relationship.get("name")
         output.write("\n\tfor entity in %s {" % (inner_entity_name))
-        output.write("\n\t    entity?.appendSelf(in: context, fetcher)")
+        output.write("\n\t    entity.appendSelf(in: context, fetcher)")
         output.write("\n\t}")
 
 
