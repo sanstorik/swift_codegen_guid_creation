@@ -8,7 +8,7 @@ def create_guid_extension(entity_xml):
     plural_entity_name = Plural.engine().plural(entity_name)
 
     output.write("\n\nextension {}: GUIDMapEntity {} \n".format(entity_name, "{"))
-    output.write("    var syncEntity: SyncEntityType { return SyncEntity.%s }" % (plural_entity_name))
+    output.write("    static var syncEntity: SyncEntityType { return SyncEntity.%s }" % (plural_entity_name))
     output.write("\n\n    func process(in context: NSManagedObjectContext, _ fetcher: GuidFetcher) {")
     output.write("\n\tappendSelf(in: context, fetcher)")
 
@@ -20,8 +20,15 @@ def create_guid_extension(entity_xml):
 
 def write_inner_relationships(entity_xml):
     inner_relationships = entity_xml.findall("relationship")
-    single_inner_relationships = filter(lambda x: x.get("toMany") == "NO" or x.get("toMany") is None, inner_relationships)
-    tomany_inner_relationships = filter(lambda x: x.get("toMany") == "YES", inner_relationships)
+
+    single_inner_relationships = list()
+    tomany_inner_relationships = list()
+
+    for relationship in inner_relationships:
+        if relationship.get("toMany" == "YES"):
+            tomany_inner_relationships.append(relationship)
+        else:
+            single_inner_relationships.append(relationship)
 
     for inner_relationship in single_inner_relationships:
         inner_entity_name = inner_relationship.get("name")
@@ -43,5 +50,10 @@ if __name__ == "__main__":
     core_data_xml = ET.parse("contents").getroot()
 
     for entity_xml in core_data_xml.findall("entity"):
-        if len(filter(lambda x: x.get("name") == "created", entity_xml.findall("attribute"))) > 0:
+        created_date_attributes = filter(lambda x: x.get("name") == "created", entity_xml.findall("attribute"))
+        is_guid_entity = len(created_date_attributes) > 0
+
+        if is_guid_entity:
             create_guid_extension(entity_xml)
+
+    output.close()
